@@ -1,0 +1,204 @@
+<!DOCTYPE html><html>
+<p>here is my writeup of the game. Maybe it should be called battle ship chess</p>
+<p>the positions of the boats are calculated like a chessboard (a,1)</p>
+<p>visibility, fire-range, move-range, hit-points</p>
+<p>carrier: 3,4,2,3</p>
+<p>battleship: 3,3,2,4</p>
+<p>cruiser: </p>
+<p>submarine:</p>
+<p>T-boat</p>
+<p>The mouse pointer has 3 different stages. 'Select' - regular looking, shoot - crosshairs, move - sail</p>
+<!-- to make some disappear https://www.w3schools.com/cssref/pr_pos_z-index.asp
+document.getElementById("myDIV").style.zIndex = "-1";-->
+<div id="map" style="float: left; padding: 5px;"></div><br>
+<p>Here is where there is going to controls and setup<br>
+<img style="position: absolute;" src="cruiser.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_cruiser" width="48" height="48">
+<br><br>
+<img style="position: absolute;" src="carrier.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_carrier" width="48" height="48">
+<br><br>
+<img style="position: absolute;" src="submarine.png" draggable="true" ondragstart="drag(event)" id="british_sub" width="48" height="48">
+<br><br>---<br>
+<img style="position: absolute;" src="Battleship.png" draggable="true" ondragstart="drag(event)" id="german_battleship" width="48" height="48">
+</p> 
+</html>
+
+<style>
+#map span{
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+}
+#map div:nth-child(odd) span:nth-child(even),
+#map div:nth-child(even) span:nth-child(odd){
+    background-image: url("0_9.png");
+}
+#map div:nth-child(even) span:nth-child(even),
+#map div:nth-child(odd) span:nth-child(odd){
+    background-image: url("0_7.png");
+}
+.cursor {
+  cursor:url(cursor_red.gif), auto;
+}
+.selected{
+    background-image: url("0_6.png");
+}
+</style>
+
+<script>
+
+/*
+Scope
+
+-drag
+-checkmove
+-select
+-checkfire
+
+btw the graphics are stolen from triplea
+
+
+TODO visibility, toggle fireing target, sunken ship, ai, 
+*/
+
+var x=8;
+var y=8;
+
+var Board = document.getElementById("map");
+
+for (var i=0; i<y; i++){
+    var row = Board.appendChild(document.createElement("div"));
+    for (var j=0; j<x; j++){
+        var square = document.createElement("span");
+        square.setAttribute("id", i+","+j);//i=x j=y
+        square.setAttribute("ondrop", "drop(event, '"+i+","+j+"')");
+        square.setAttribute("ondragover", "allowDrop(event)");
+        square.setAttribute("onclick", "select(event)");
+        row.appendChild(square);
+    }
+}
+
+var units = {
+  british_carrier: {
+    visibility: 3,
+    firerange: 4,
+    moverange: 2,
+    hitpoints: 3
+  },
+  british_cruiser: {
+    visibility: 3,
+    firerange: 2,
+    moverange: 3,
+    hitpoints: 2
+  },
+  german_battleship: {
+    visibility: 3,
+    firerange: 2,
+    moverange: 2,
+    hitpoints: 3
+  }
+};
+
+//drag and drop
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+function drag(ev) {
+  ev.dataTransfer.setData("shipid", ev.target.id);//text
+  ev.dataTransfer.setData("startloc", ev.target.parentNode.id);
+}
+function drop(ev, loc) {
+  ev.preventDefault();
+  var ship = ev.dataTransfer.getData("shipid");
+  var start = ev.dataTransfer.getData("startloc");
+  //console.log(loc+" "+ship+" start location:"+start);//
+  if(checkmove(ship, loc, start)){
+    ev.target.appendChild(document.getElementById(ship));
+  }
+}
+function checkmove(unit, loc, start){
+//drag posit minus drop pos dont exceed units range
+  var xdistance = Math.abs(+start.substring(0, 1) - +loc.substring(0, 1));
+  var ydistance = Math.abs(+start.substring(2) - +loc.substring(2));
+  var distance = xdistance + ydistance;
+  console.log(distance+" < "+units[unit].moverange+" s:"+start+" f:"+loc);
+
+//space already occupied
+  var tile = document.getElementById(loc).getElementsByTagName('img')[0];
+
+  if(tile==undefined && distance <= units[unit].moverange || start==""){
+    return true;
+  }
+}
+
+var selected = null;
+function select(e){//tile or ship -------------------------------
+console.log("attempting select");
+  if(e.target.childNodes[0]){//selected tile--
+    if(selected==null){//selected tile to use ship
+      selected = { ship: e.target.childNodes[0].id, location: e.target.id };
+      console.log("Selected: "+JSON.stringify(selected));
+      //e.target.style.backgroundImage = "url('0_6.png')";
+      document.getElementById(e.target.id).classList.add('selected');//////////////////////
+      document.body.classList.add('cursor');
+    }else if(selected){ //if deselecting ship //select!=null and its the same as current select
+      if(selected.location==e.target.id){
+        document.body.style.cursor = null;//"default";
+      //tile background to default style
+
+
+
+
+//document.getElementById(e.target.id).add('selected');
+
+        selected = null;
+
+      
+      }else{//fire
+        checkfire(selected, e.target.id);
+        selected = null
+      }
+    }
+  }else{//clicked on ship ------------/-/-/-/-/-//-/-/-/--------------
+console.log("click on ship itself");
+
+    if(selected==null){//selected tile to use ship
+      selected = { ship: e.target.id, location: e.target.parentNode.id };
+      console.log("Selected: "+JSON.stringify(selected));
+      //e.target.style.backgroundImage = "url('0_6.png')";
+      document.getElementById(e.target.parentNode.id).classList.add('selected');//////////////////////
+      document.body.classList.add('cursor');
+    }else if(selected){ //if deselecting ship //select!=null and its the same as current select
+      if(selected.location==e.target.parentNode.id){
+        document.body.style.cursor = null;//"default";
+
+
+        selected = null;
+
+      
+      }else{//fire
+        checkfire(e.target.id, e.target.parentNode.id);
+        selected = null
+      }
+    }
+
+  }
+}//end of select function
+function checkfire(e, target){//need target ship besides location//.firstElementChild
+  //if hit
+  var xdistance = Math.abs(+selected.location.substring(0, 1) - +target.substring(0, 1));
+  var ydistance = Math.abs(+selected.location.substring(2) - +target.substring(2));
+  var distance = xdistance + ydistance;
+  console.log("units "+distance+" < "+units[selected.ship].firerange+" s:"+selected.location+" t:"+target);
+  console.log("distance: "+distance+" range:"+units[selected.ship].firerange);
+  console.log("eship:"+e+" selectedship: "+selected.ship);
+  var otherteam = e.substring(0, e.indexOf("_"));// 
+  var team = selected.ship.substring(0, selected.ship.indexOf("_"));
+  if(distance <= units[selected.ship].firerange && otherteam != team){// 
+    document.body.style.cursor = "default";//null;
+    //document.body.removeAttribute('cursor');
+    units[e].hitpoints = units[e].hitpoints-1;
+    console.log("hit! from "+selected.location);
+    console.log();
+  }
+}
+</script>
