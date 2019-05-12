@@ -1,13 +1,13 @@
 <!DOCTYPE html><html>
-<p>here is my writeup of the game. Maybe it should be called battle ship chess</p>
+<p>here is my writeup of the game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
 <p>the positions of the boats are calculated like a chessboard (a,1)</p>
 <p>visibility, fire-range, move-range, hit-points</p>
-<p>carrier: 3,4,2,3</p>
-<p>battleship: 3,3,2,4</p>
-<p>cruiser: </p>
-<p>submarine:</p>
-<p>T-boat</p>
-<p>The mouse pointer has 3 different stages. 'Select' - regular looking, shoot - crosshairs, move - sail</p>
+carrier: 3,4,2,3
+<br>battleship: 3,3,2,4
+<br>cruiser: 
+<br>submarine:
+<br>T-boat</p>
+<!--<p>The mouse pointer has 3 different stages. 'Select' - regular looking, shoot - crosshairs, move - sail</p>-->
 <!-- to make some disappear https://www.w3schools.com/cssref/pr_pos_z-index.asp
 document.getElementById("myDIV").style.zIndex = "-1";-->
 <div id="map" style="float: left; padding: 5px;"></div><br>
@@ -54,12 +54,10 @@ Scope
 -select
 -checkfire
 
-btw the graphics are stolen from triplea
-
-
-TODO visibility, toggle fireing target, sunken ship, ai, 
+TODO fix toggle select, sound, ai, visibility, multiplayer
 */
 
+//Board Dimension 
 var x=8;
 var y=8;
 
@@ -82,13 +80,15 @@ var units = {
     visibility: 3,
     firerange: 4,
     moverange: 2,
-    hitpoints: 3
+    hitpoints: 3,
+    sinking: "Battleship_hit.png"
   },
   british_cruiser: {
     visibility: 3,
     firerange: 2,
     moverange: 3,
-    hitpoints: 2
+    hitpoints: 2,
+    sinking: "battleship_hit.png"
   },
   german_battleship: {
     visibility: 3,
@@ -192,13 +192,17 @@ function checkfire(e, target){//need target ship besides location//.firstElement
   console.log("distance: "+distance+" range:"+units[selected.ship].firerange);
   console.log("eship:"+e+" selectedship: "+selected.ship);
   var otherteam = e.substring(0, e.indexOf("_"));// 
-  var team = selected.ship.substring(0, selected.ship.indexOf("_"));
-  if(distance <= units[selected.ship].firerange && otherteam != team){// 
+  var yourteam = selected.ship.substring(0, selected.ship.indexOf("_"));
+  if(distance <= units[selected.ship].firerange && otherteam != yourteam){// Hit
     document.body.style.cursor = "default";//null;
     //document.body.removeAttribute('cursor');
     units[e].hitpoints = units[e].hitpoints-1;
     console.log("hit! from "+selected.location);
-    console.log();
+    console.log(e+": hitpoint left:"+units[e].hitpoints);
+    if(units[e].hitpoints <1){
+      document.getElementById(e).src = units[e].sinking;
+      document.getElementById(e).id = "sunk";
+    }
   }
 }
 </script>
