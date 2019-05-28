@@ -10,8 +10,8 @@ carrier: 3,4,2,3
 <!--<p>The mouse pointer has 3 different stages. 'Select' - regular looking, shoot - crosshairs, move - sail</p>-->
 <!-- to make some disappear https://www.w3schools.com/cssref/pr_pos_z-index.asp
 document.getElementById("myDIV").style.zIndex = "-1";-->
-<div id="map" style="float: left; padding: 5px;"></div><br>
-<p>Here is where there is going to controls and setup<br>
+<div id="map"></div><br>
+<p>Here is where there is going to controls and setup<br><button onclick="next()">Next Turn</button><br>
 <img style="position: absolute;" src="cruiser.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_cruiser" width="48" height="48">
 <br><br>
 <img style="position: absolute;" src="carrier.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_carrier" width="48" height="48">
@@ -19,10 +19,14 @@ document.getElementById("myDIV").style.zIndex = "-1";-->
 <img style="position: absolute;" src="submarine.png" draggable="true" ondragstart="drag(event)" id="british_sub" width="48" height="48">
 <br><br>---<br>
 <img style="position: absolute;" src="Battleship.png" draggable="true" ondragstart="drag(event)" id="german_battleship" width="48" height="48">
-</p> 
+</p>
 </html>
 
 <style>
+#map{
+  float: left;
+  padding: 5px;
+}
 #map span{
     display: inline-block;
     width: 64px;
@@ -60,6 +64,8 @@ TODO fix toggle select, sound, ai, visibility, multiplayer
 //Board Dimension 
 var x=8;
 var y=8;
+
+var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3"); // buffers automatically when created
 
 var Board = document.getElementById("map");
 
@@ -110,7 +116,6 @@ function drop(ev, loc) {
   ev.preventDefault();
   var ship = ev.dataTransfer.getData("shipid");
   var start = ev.dataTransfer.getData("startloc");
-  //console.log(loc+" "+ship+" start location:"+start);//
   if(checkmove(ship, loc, start)){
     ev.target.appendChild(document.getElementById(ship));
   }
@@ -125,15 +130,21 @@ function checkmove(unit, loc, start){
 //space already occupied
   var tile = document.getElementById(loc).getElementsByTagName('img')[0];
 
-  if(tile==undefined && distance <= units[unit].moverange || start==""){
+
+  if(start=="") return true;//placing units at start of game
+
+  if(tile==undefined && distance <= units[unit].moverange && units[unit].moved != true){
+    units[unit].moved = true;
     return true;
+  }else{
+    console.log("illegal!! already moved or not your turn");
   }
 }
 
 var selected = null;
 function select(e){//tile or ship -------------------------------
 console.log("attempting select");
-  if(e.target.childNodes[0]){//selected tile--
+  if(e.target.childNodes[0]){//selected tile-- I need to allow select empty and miss
     if(selected==null){//selected tile to use ship
       selected = { ship: e.target.childNodes[0].id, location: e.target.id };
       console.log("Selected: "+JSON.stringify(selected));
@@ -193,16 +204,25 @@ function checkfire(e, target){//need target ship besides location//.firstElement
   console.log("eship:"+e+" selectedship: "+selected.ship);
   var otherteam = e.substring(0, e.indexOf("_"));// 
   var yourteam = selected.ship.substring(0, selected.ship.indexOf("_"));
-  if(distance <= units[selected.ship].firerange && otherteam != yourteam){// Hit
+  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e].fired != true){// Hit
     document.body.style.cursor = "default";//null;
     //document.body.removeAttribute('cursor');
+
+    units[e].fired = true;
     units[e].hitpoints = units[e].hitpoints-1;
+    hit.play();
     console.log("hit! from "+selected.location);
     console.log(e+": hitpoint left:"+units[e].hitpoints);
     if(units[e].hitpoints <1){
       document.getElementById(e).src = units[e].sinking;
       document.getElementById(e).id = "sunk";
     }
+  }
+}
+function next(){//maybe i should stop using objects and convert to array
+  for(x=0; x<Object.keys(units).length; x++){
+    Object.values(units)[x].moved = false;
+    Object.values(units)[x].fired = false;
   }
 }
 </script>
