@@ -1,8 +1,8 @@
 # battleship
-new and better version of battleship
-here is my writeup of the game. Maybe it should be called battle ship chess
+New and better version of battleship.
+here is my writeup of the game. Maybe it should be called battle-ship-chess
 
-the positions of the boats are calculated like a chessboard (a,1)
+The positions of the boats are calculated like a chessboard (a,1) and it is turn based. The difference from the non digital version is that the boats could move.
 
 visibility, fire-range, move-range, hit-points
 

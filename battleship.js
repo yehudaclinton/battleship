@@ -1,57 +1,3 @@
-<!DOCTYPE html><html>
-<p>here is my writeup of the game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
-<p>the positions of the boats are calculated like a chessboard (a,1)</p>
-<p>visibility, fire-range, move-range, hit-points</p>
-carrier: 3,4,2,3
-<br>battleship: 3,3,2,4
-<br>cruiser: 
-<br>submarine:
-<br>T-boat</p>
-<!--<p>The mouse pointer has 3 different stages. 'Select' - regular looking, shoot - crosshairs, move - sail</p>-->
-<!-- to make some disappear https://www.w3schools.com/cssref/pr_pos_z-index.asp
-document.getElementById("myDIV").style.zIndex = "-1";-->
-<div id="map"></div><br>
-<p>Here is where there is going to controls and setup<br><button onclick="next()">Next Turn</button><br>
-<img style="position: absolute;" src="cruiser.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_cruiser" width="48" height="48">
-<br><br>
-<img style="position: absolute;" src="carrier.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="british_carrier" width="48" height="48">
-<br><br>
-<img style="position: absolute;" src="submarine.png" draggable="true" ondragstart="drag(event)" id="british_sub" width="48" height="48">
-<br><br>---<br>
-<img style="position: absolute;" src="Battleship.png" onclick="select(event)" draggable="true" ondragstart="drag(event)" id="german_battleship" width="48" height="48">
-</p>
-
-<script src="battleship.js"></script>
-
-</html>
-
-<style>
-#map{
-  float: left;
-  padding: 5px;
-}
-#map span{
-    display: inline-block;
-    width: 64px;
-    height: 64px;
-}
-#map div:nth-child(odd) span:nth-child(even),
-#map div:nth-child(even) span:nth-child(odd){
-    background-image: url("0_9.png");
-}
-#map div:nth-child(even) span:nth-child(even),
-#map div:nth-child(odd) span:nth-child(odd){
-    background-image: url("0_7.png");
-}
-.cursor { /*currently out of use*/
-  cursor:url(cursor_red.gif), auto;
-}
-.selected{
-    background-image: url("0_6.png");
-}
-</style>
-
-<script>
 
 /*
 Scope
@@ -229,4 +175,3 @@ function next(){//maybe i should stop using objects and convert to array
     Object.values(units)[x].fired = false;
   }
 }
-</script>
