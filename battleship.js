@@ -30,6 +30,7 @@ for (var i=0; i<y; i++){
     }
 }
 
+//should use class like https://www.digitalocean.com/community/tutorials/understanding-classes-in-javascript
 var units = {
   british_carrier: {
     visibility: 3,
@@ -49,7 +50,8 @@ var units = {
     visibility: 3,
     firerange: 2,
     moverange: 2,
-    hitpoints: 3
+    hitpoints: 3,
+    sinking: "battleship_hit.png"
   }
 };
 
@@ -94,20 +96,18 @@ var selected = null;
 function select(e){//tile or ship -------------------------------
   if(e.target.childNodes[0]){//selected tile-- I need to allow select empty and miss
 console.log("select tile");
-    if(selected==null){//selected tile to use ship
+    /*if(selected==null){//selected tile to use ship --- disable this function
       selected = { ship: e.target.childNodes[0].id, location: e.target.id };
       console.log("Selected: "+JSON.stringify(selected));
       //e.target.style.backgroundImage = "url('0_6.png')";
       document.getElementById(e.target.id).classList.add('selected');//////////////////////
       document.body.classList.add('cursor');
-    }else if(selected){ //if deselecting ship //select!=null and its the same as current select
+    }else*/ if(selected){ //if deselecting ship //select!=null and its the same as current select
       if(selected.location==e.target.id){
         document.body.style.cursor = null;//"default";
       //tile background to default style
 
 console.log("deselecting1");
-
-
 //document.getElementById(e.target.id).add('selected');
 
         selected = null;
@@ -137,41 +137,44 @@ console.log("deselecting2");
 
       
       }else{//fire
-        checkfire(e.target.id, e.target.parentNode.id);
+        checkfire(e.target, e.target.parentNode);
         selected = null
       }
     }
 
   }
 }//end of select function
-function checkfire(e, target){//need target ship besides location//.firstElementChild
+function checkfire(e, target){//need target ship besides location
   //if hit
-  var xdistance = Math.abs(+selected.location.substring(0, 1) - +target.substring(0, 1));
-  var ydistance = Math.abs(+selected.location.substring(2) - +target.substring(2));
+  var xdistance = Math.abs(+selected.location.substring(0, 1) - +target.id.substring(0, 1));
+  var ydistance = Math.abs(+selected.location.substring(2) - +target.id.substring(2));
   var distance = xdistance + ydistance;
-  console.log("units "+distance+" < "+units[selected.ship].firerange+" s:"+selected.location+" t:"+target);
-  console.log("distance: "+distance+" range:"+units[selected.ship].firerange);
-  console.log("eship:"+e+" selectedship: "+selected.ship);
-  var otherteam = e.substring(0, e.indexOf("_"));// 
-  var yourteam = selected.ship.substring(0, selected.ship.indexOf("_"));
-  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e].fired != true){// Hit
+  //console.log("units "+distance+" < "+units[selected.ship].firerange+" s:"+selected.location+" t:"+target.id);
+  //console.log("distance: "+distance+" range:"+units[selected.ship].firerange);
+  //console.log("eship:"+e+" selectedship: "+selected.ship);
+  var otherteam = e.className;//
+  var yourteam = selected.ship;
+  console.log("yourteam: "+yourteam+"\notherteam: "+otherteam);
+  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e.id].fired != true){// Hit
     document.body.style.cursor = "default";//null;
     //document.body.removeAttribute('cursor');
 
-    units[e].fired = true;
-    units[e].hitpoints = units[e].hitpoints-1;
+    units[e.id].fired = true;
+    units[e.id].hitpoints = units[e.id].hitpoints-1;
     hit.play();
     console.log("hit! from "+selected.location);
-    console.log(e+": hitpoints left:"+units[e].hitpoints);
+    console.log(e.id+": hitpoints left:"+units[e.id].hitpoints);
     if(units[e].hitpoints <1){
-      document.getElementById(e).src = units[e].sinking;
-      document.getElementById(e).id = "sunk";
+      document.getElementById(e.id).src = units[e.id].sinking;
+      document.getElementById(e.id).classList.add("sunk");
     }
   }
 }
-function next(){//maybe i should stop using objects and convert to array
+function next(){//next turn reset //maybe i should stop using objects and convert to array
   for(x=0; x<Object.keys(units).length; x++){
     Object.values(units)[x].moved = false;
     Object.values(units)[x].fired = false;
   }
+  //remove sunken ships
+  document.querySelectorAll(".sunk").forEach(e => e.parentNode.removeChild(e));
 }
