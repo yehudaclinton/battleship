@@ -1,0 +1,34 @@
+<head>
+  <title>battleship</title>
+</head>
+
+<body>
+
+  <h1>Welcome to Meteor!</h1>
+
+
+  {{> game}}
+</body>
+
+<template name="game">
+<p>here is my writeup of the game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
+<p>the positions of the boats are calculated like a chessboard (a,1)</p>
+<p>visibility, fire-range, move-range, hit-points</p>
+carrier: 3,4,2,3
+<br>battleship: 3,3,2,4
+<br>cruiser: 
+<br>submarine:
+<br>
+
+<div id="map"></div>
+<p>Here is where there is going to controls and setup</p><button>Next Turn</button><br>
+<div id="start">
+<img style="position: absolute;" src="images/cruiser.png" draggable="true" id="british_cruiser" width="48" height="48">
+<br><br>
+<img style="position: absolute;" src="images/carrier.png" draggable="true" id="british_carrier" width="48" height="48">
+<br><br>
+<img style="position: absolute;" src="images/submarine.png" draggable="true" id="british_sub" width="48" height="48">
+<br><br>---<br>
+<img style="position: absolute;" src="images/Battleship.png" draggable="true" id="german_battleship" width="48" height="48">
+</div>
+</template>

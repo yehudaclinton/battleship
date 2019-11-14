@@ -1,0 +1,27 @@
+body {
+  padding: 10px;
+  font-family: sans-serif;
+}
+#map{
+  float: left;
+  padding: 5px;
+}
+#map span{
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+}
+#map div:nth-child(odd) span:nth-child(even),
+#map div:nth-child(even) span:nth-child(odd){
+    background-image: url("images/0_9.png");
+}
+#map div:nth-child(even) span:nth-child(even),
+#map div:nth-child(odd) span:nth-child(odd){
+    background-image: url("images/0_7.png");
+}
+.cursor { /*currently out of use*/
+  cursor:url(cursor_red.gif), auto;
+}
+.selected{
+    background-image: url("images/0_6.png");
+}
