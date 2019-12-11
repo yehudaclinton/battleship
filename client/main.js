@@ -1,7 +1,8 @@
 import { Template } from 'meteor/templating';
-import { ReactiveVar } from 'meteor/reactive-var';
 
 import './main.html';
+
+import "../public/collections.js";
 
 var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3"); // buffers automatically when created
 
@@ -29,9 +30,20 @@ var units = {
     sinking: "battleship_hit.png"
   } // TODO correct sinking img and more ships
 };
+
 var selected = null;
 
-//*/
+Meteor.subscribe('games');
+Meteor.subscribe('moves');/*, function() { }*/
+//Session.set({a: Games.findOne()});
+
+var cgame = null;
+var currentgame = null;
+var player = "unassigned";
+if(navigator.userAgent.includes("Chrome")) player = "british";
+if(navigator.userAgent.includes("Firefox")) player = "german";
+
+
 Template.game.onRendered(function(){
 
 //Board Dimension
@@ -103,23 +115,37 @@ Template.game.events({
     }
 
 
+    if(Session.get('a')){ //game: cgame
+      Meteor.call('move', {game: document.querySelector("#gameselect").value, ship: dragshipid, start: dragstart, finish: event.target.id})
+      console.log("move method");
+    }
   },
   'drag img'(event, ev) {
     dragstart = event.target.parentElement.id;
     dragshipid = event.target.id;
+  },
+  'click #new'(event){
+    if(document.getElementById("gamename").value != null){
+      Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date()})
 
-//-------------  we are going to use click and drop -- no we arent
-
-  }, //end of drag img
-  'click button'(event, instance) {
-
-    selected = null;
-    for(x=0; x<Object.keys(units).length; x++){
-      Object.values(units)[x].moved = false;
-      Object.values(units)[x].fired = false;
     }
-    //remove sunken ships
-    document.querySelectorAll(".sunk").forEach(e => e.parentNode.removeChild(e));
+  },
+  'click #next'(event, instance) {
+    //let result = Meteor.wrapAsync(
+    Meteor.call('nextTurn', player, (error, result) => {
+      if(result){ //deactivated on server
+        console.log("turn accepted");
+        selected = null;
+        for(x=0; x<Object.keys(units).length; x++){
+          Object.values(units)[x].moved = false;
+          Object.values(units)[x].fired = false;
+        }
+        //remove sunken ships
+        document.querySelectorAll(".sunk").forEach(e => e.parentNode.removeChild(e));
+      }else{
+console.log("other move");
+      }
+    });
   },
   'click img'(e){
 
@@ -146,3 +172,51 @@ console.log("click on ship itself");
 
   }
 });
+
+//Template.gamestats.onRendered(function(){
+//  Session.set({a: document.getElementById("gameselect").value});
+//});
+
+Template.gamestats.events({
+  'change #gameselect': function(event){
+    Session.set({a: document.getElementById("gameselect").value});
+    console.log("set "+document.getElementById("gameselect").value);
+  }
+});
+
+Template.gamestats.helpers({
+  current: function () {
+  //console.log("before cgame "+Session.get('a'));//+document.querySelector("#gameselect").value);
+
+
+if(Session.get('a')){
+
+  //var themove = Moves.find({"game" : Session.get('a')}, {sort: {createdAt: -1}}).fetch()
+  var themove = Moves.find({"game" : Session.get('a')}).fetch().reverse();
+  //var themove = Moves.findOne({"game" : Session.get('a')});//Its only getting the first move
+
+  themove = themove[0];//themove.length - 1
+  console.log("tmove "+themove.ship);
+  var theship = document.getElementById(themove.ship);
+  document.getElementById(themove.finish).appendChild(theship);
+
+/**///console.log("ses "+Session.get('a'));
+    return Games.findOne({"game" : Session.get('a')}).name; //
+}
+
+  },
+  gamelist: function() {
+    return Games.find({}, {sort: {createdAt: -1}}).fetch();
+  }
+});
+///build a game from server
+
+///multiplayer sessions
+//navigator.userAgent.includes("Chrome")
+
+///place a piece
+//document.getElementById().appendChild()
+
+///get latest move
+//find({}).sort({'_id': -1}).limit(1)
+

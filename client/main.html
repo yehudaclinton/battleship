@@ -4,24 +4,28 @@
 
 <body>
 
-  <h1>Welcome to Meteor!</h1>
+  <h1>Welcome to Battleship!</h1>
 
-
+  {{> gamestats}}
   {{> game}}
 </body>
 
-<template name="game">
-<p>here is my writeup of the game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
-<p>the positions of the boats are calculated like a chessboard (a,1)</p>
-<p>visibility, fire-range, move-range, hit-points</p>
-carrier: 3,4,2,3
-<br>battleship: 3,3,2,4
-<br>cruiser: 
-<br>submarine:
-<br>
+<template name="gamestats">
+  <p>welcome to -{{current}}- game.</p>
+  Select - <select id="gameselect">
+  {{#each gamelist}}
+  <option value="{{this.name}}">{{this.name}}</option>
+  {{/each}}
+  </select>
+</template>
 
+<template name="game">
+<p>here is my battleship game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
+<br>
+<input type="text" id="gamename" /><button id="new">New Game</button>
+<br>
 <div id="map"></div>
-<p>Here is where there is going to controls and setup</p><button>Next Turn</button><br>
+<p>Here is where there is going to controls and setup</p><button id="next">Next Turn</button><br>
 <div id="start">
 <img style="position: absolute;" src="images/cruiser.png" draggable="true" id="british_cruiser" width="48" height="48">
 <br><br>
