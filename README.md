@@ -1,6 +1,11 @@
-# battleship
+# Battleship (Server version)
 New and better version of battleship.
 here is my writeup of the game. Maybe it should be called battle-ship-chess
+
+# Meteorjs - instructions
+the way i download this application is: clone/download, create new meteor project, copy the files into it, remove autoplish and insecure and add sessions, then meteor run
+
+right now multiplayer is to be chrome based browsers vs firefox
 
 The positions of the boats are calculated like a chessboard (a,1) and it is turn based. The difference from the non digital version is that the boats could move.
 
