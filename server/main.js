@@ -1,10 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import "../public/collections.js";
 
-//export const Games = new Mongo.Collection('games');
-
-//Games = new Mongo.Collection('games');
-
 Meteor.startup(() => {
 
 var turn = "british"; //game starts with british
@@ -28,10 +24,15 @@ Meteor.methods({
   nextTurn: function(player){
     //console.log(player);
     if(player=="british" && turn=="british"){
+      turn == "german";
       return true;
     }else if(player=="german" && turn=="german"){
+      turn == "british";
       return true;
     }else{ return false; }
+  },
+  checkTurn: function(player){
+    if(player==turn) return true;
   }
 });
 

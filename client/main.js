@@ -4,49 +4,27 @@ import './main.html';
 
 import "../public/collections.js";
 
-var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3"); // buffers automatically when created
-
-//the ships could have used json
+//these ships should be in a different file called units
 var units = {
-  british_carrier: {
-    visibility: 3,
-    firerange: 4,
-    moverange: 2,
-    hitpoints: 3,
-    sinking: "Battleship_hit.png"
-  },
-  british_cruiser: {
-    visibility: 3,
-    firerange: 2,
-    moverange: 3,
-    hitpoints: 2,
-    sinking: "battleship_hit.png"
-  },
-  german_battleship: {
-    visibility: 3,
-    firerange: 2,
-    moverange: 2,
-    hitpoints: 3,
-    sinking: "battleship_hit.png"
-  } // TODO correct sinking img and more ships
+  british_carrier: {visibility: 3, firerange: 4, moverange: 2, hitpoints: 3, sinking: "Battleship_hit.png"},
+  british_cruiser: {visibility: 3, firerange: 2, moverange: 3, hitpoints: 2, sinking: "battleship_hit.png"},
+  german_battleship: {visibility: 3, firerange: 2, moverange: 2, hitpoints: 3, sinking: "battleship_hit.png"},
+  british_sub: {visibilty: 2, firepower: 2, moverange: 2, hitpoints: 1, sinking: "nothing.png"}
+// TODO correct sinking img and more ships
 };
 
-var selected = null;
-
+//subscribing to reactive variables
 Meteor.subscribe('games');
-Meteor.subscribe('moves');/*, function() { }*/
-//Session.set({a: Games.findOne()});
+Meteor.subscribe('moves');
 
-var cgame = null;
-var currentgame = null;
-var player = "unassigned";
+var player = "unassigned"; //multi player teams
 if(navigator.userAgent.includes("Chrome")) player = "british";
 if(navigator.userAgent.includes("Firefox")) player = "german";
 
 
 Template.game.onRendered(function(){
 
-//Board Dimension
+//Board Dimensions by squares
 var x=8;
 var y=8;
 var Board = document.getElementById("map");
@@ -62,6 +40,8 @@ var Board = document.getElementById("map");
   }
 });
 
+var selected = null;
+
 function checkfire(e, target){ //need target ship besides location
   //if hit
   var xdistance = Math.abs(+selected.location.substring(0, 1) - +target.id.substring(0, 1));
@@ -69,8 +49,11 @@ function checkfire(e, target){ //need target ship besides location
   var distance = xdistance + ydistance;
   var otherteam = e.className; //
   var yourteam = selected.ship;
+  var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3");
+
   console.log("yourteam: "+yourteam+"\notherteam: "+otherteam);
-  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e.id].fired != true){// Hit
+  // if the the following is true then 'Hit'
+  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e.id].fired != true){
     document.body.style.cursor = "default";//null;
     //document.body.removeAttribute('cursor');
 
@@ -112,11 +95,7 @@ Template.game.events({
     console.log("drop !! "+event.target.id+" "+dragstart);
     if(checkmove(dragshipid, event.target.id, dragstart)){
       event.target.appendChild(document.getElementById(dragshipid));
-    }
-
-
-    if(Session.get('a')){ //game: cgame
-      Meteor.call('move', {game: document.querySelector("#gameselect").value, ship: dragshipid, start: dragstart, finish: event.target.id})
+      Meteor.call('move', {game: Games.findOne()._id, ship: dragshipid, start: dragstart, finish: event.target.id})
       console.log("move method");
     }
   },
@@ -127,14 +106,15 @@ Template.game.events({
   'click #new'(event){
     if(document.getElementById("gamename").value != null){
       Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date()})
-
+      let currentgame = document.getElementById("gamename").value;
+      console.log("create new game "+document.getElementById("gamename").value);
     }
   },
   'click #next'(event, instance) {
     //let result = Meteor.wrapAsync(
     Meteor.call('nextTurn', player, (error, result) => {
       if(result){ //deactivated on server
-        console.log("turn accepted");
+        console.log("turn accepted "+result);
         selected = null;
         for(x=0; x<Object.keys(units).length; x++){
           Object.values(units)[x].moved = false;
@@ -149,6 +129,8 @@ console.log("other move");
   },
   'click img'(e){
 
+  Meteor.call('checkTurn', player, (error, result) => {
+    if(result==true){
 console.log("click on ship itself");
 
     if(selected==null){
@@ -161,49 +143,27 @@ console.log("click on ship itself");
     }else if(selected){ //if deselecting ship //select!=null and its the same as current select
       if(selected.location==e.target.parentNode.id){
         document.body.style.cursor = null;//null//"default";
-      }else{//fire
+      }else{ //fire
         checkfire(e.target, e.target.parentNode);
       }
 
       console.log("deselecting");
         selected = null;
     }
-
-
-  }
-});
-
-//Template.gamestats.onRendered(function(){
-//  Session.set({a: document.getElementById("gameselect").value});
-//});
-
-Template.gamestats.events({
-  'change #gameselect': function(event){
-    Session.set({a: document.getElementById("gameselect").value});
-    console.log("set "+document.getElementById("gameselect").value);
+   } //end of if result
+   });
   }
 });
 
 Template.gamestats.helpers({
   current: function () {
-  //console.log("before cgame "+Session.get('a'));//+document.querySelector("#gameselect").value);
-
-
-if(Session.get('a')){
-
-  //var themove = Moves.find({"game" : Session.get('a')}, {sort: {createdAt: -1}}).fetch()
-  var themove = Moves.find({"game" : Session.get('a')}).fetch().reverse();
-  //var themove = Moves.findOne({"game" : Session.get('a')});//Its only getting the first move
-
-  themove = themove[0];//themove.length - 1
-  console.log("tmove "+themove.ship);
-  var theship = document.getElementById(themove.ship);
-  document.getElementById(themove.finish).appendChild(theship);
-
-/**///console.log("ses "+Session.get('a'));
-    return Games.findOne({"game" : Session.get('a')}).name; //
-}
-
+//var currentgame = document.getElementById("gamename").value;
+//console.log("helper "+currentgame);//{_id : currentgame}
+var themove = Moves.find().fetch();
+themove = themove[themove.length - 1];
+var theship = document.getElementById(themove.ship);
+document.getElementById(themove.finish).appendChild(theship);
+    return Games.findOne().name; //.fetch();
   },
   gamelist: function() {
     return Games.find({}, {sort: {createdAt: -1}}).fetch();
