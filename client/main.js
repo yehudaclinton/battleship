@@ -47,13 +47,13 @@ function checkfire(e, target){ //need target ship besides location
   var xdistance = Math.abs(+selected.location.substring(0, 1) - +target.id.substring(0, 1));
   var ydistance = Math.abs(+selected.location.substring(2) - +target.id.substring(2));
   var distance = xdistance + ydistance;
-  var otherteam = e.className; //
+  var otherteam = e.id.substr(0,e.id.indexOf('_')); //e.className; //
   var yourteam = selected.ship;
   var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3");
 
   console.log("yourteam: "+yourteam+"\notherteam: "+otherteam);
   // if the the following is true then 'Hit'
-  if(distance <= units[selected.ship].firerange && otherteam != yourteam && units[e.id].fired != true){
+  if(distance <= units[selected.ship].firerange && otherteam !== yourteam && units[e.id].fired !== true){
     document.body.style.cursor = "default";//null;
     //document.body.removeAttribute('cursor');
 
@@ -104,7 +104,7 @@ Template.game.events({
     dragshipid = event.target.id;
   },
   'click #new'(event){
-    if(document.getElementById("gamename").value != null){
+    if(document.getElementById("gamename").value !== null){
       Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date()})
       let currentgame = document.getElementById("gamename").value;
       console.log("create new game "+document.getElementById("gamename").value);
@@ -128,10 +128,10 @@ console.log("other move");
     });
   },
   'click img'(e){
-
-  Meteor.call('checkTurn', player, (error, result) => {
+      console.log("click "+selected);
+   var selectedTeam = e.target.id.substr(0,e.target.id.indexOf('_'));
+  Meteor.call('checkTurn', selectedTeam, (error, result) => {
     if(result==true){
-console.log("click on ship itself");
 
     if(selected==null){
       selected = { ship: e.target.id, location: e.target.parentNode.id };
@@ -140,16 +140,17 @@ console.log("click on ship itself");
       document.getElementById(e.target.parentNode.id).classList.add('selected');//////////////////////
       //document.body.classList.add('cursor');
       document.body.style.cursor = "crosshair";
+    }
     }else if(selected){ //if deselecting ship //select!=null and its the same as current select
       if(selected.location==e.target.parentNode.id){
-        document.body.style.cursor = null;//null//"default";
+        document.body.style.cursor = null; //"default";
       }else{ //fire
         checkfire(e.target, e.target.parentNode);
       }
 
       console.log("deselecting");
         selected = null;
-    }
+    //}
    } //end of if result
    });
   }
