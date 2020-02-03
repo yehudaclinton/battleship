@@ -1,15 +1,14 @@
 import { Template } from 'meteor/templating';
-
 import './main.html';
-
 import "../public/collections.js";
 
 //these ships should be in a different file called units
 var units = {
   british_carrier: {visibility: 3, firerange: 4, moverange: 2, hitpoints: 3, sinking: "Battleship_hit.png"},
   british_cruiser: {visibility: 3, firerange: 2, moverange: 3, hitpoints: 2, sinking: "battleship_hit.png"},
-  german_battleship: {visibility: 3, firerange: 2, moverange: 2, hitpoints: 3, sinking: "battleship_hit.png"},
-  british_sub: {visibilty: 2, firepower: 2, moverange: 2, hitpoints: 1, sinking: "nothing.png"}
+  german_battleship: {visibility: 3, firerange: 2, moverange: 2, hitpoints: 3, sinking: "Battleship_hit-german.png"},
+  german_destroyer: {visibility: 3, firerange: 2, moverange: 3, hitpoints: 2, sinking: "battleship_hit.png"},
+  british_sub: {visibilty: 2, firepower: 2, moverange: 2, hitpoints: 1, sinking: "nothing.png"} //not added
 // TODO correct sinking img and more ships
 };
 
@@ -31,6 +30,7 @@ var Board = document.getElementById("map");
 
   for (var i=0; i<y; i++){
     var row = Board.appendChild(document.createElement("div"));
+    //row.style["padding-bottom"] = "0px";
     for (var j=0; j<x; j++){
         var square = document.createElement("span");
         square.setAttribute("id", i+","+j); //i=x j=y
@@ -51,7 +51,6 @@ function checkfire(e, target){ //need target ship besides location
   var yourteam = selected.ship;
   var hit = new Audio("battle_sea_normal_01_battleship_volley.mp3");
 
-  console.log("yourteam: "+yourteam+"\notherteam: "+otherteam);
   // if the the following is true then 'Hit'
   if(distance <= units[selected.ship].firerange && otherteam !== yourteam && units[e.id].fired !== true){
     document.body.style.cursor = "default";//null;
@@ -60,8 +59,6 @@ function checkfire(e, target){ //need target ship besides location
     units[e.id].fired = true;
     units[e.id].hitpoints = units[e.id].hitpoints-1;
     hit.play();
-    console.log("hit! from "+selected.location);
-    console.log(e.id+": hitpoints left:"+units[e.id].hitpoints);
     if(units[e.id].hitpoints <1){
       document.getElementById(e.id).src = units[e.id].sinking;
       document.getElementById(e.id).classList.add("sunk");
@@ -92,27 +89,40 @@ var dragshipid, dragstart;
 Template.game.events({
   'dropped .space': function(event, temp) {
     event.preventDefault();
-    console.log("drop !! "+event.target.id+" "+dragstart);
+
     if(checkmove(dragshipid, event.target.id, dragstart)){
       event.target.appendChild(document.getElementById(dragshipid));
       Meteor.call('move', {game: Games.findOne()._id, ship: dragshipid, start: dragstart, finish: event.target.id})
-      console.log("move method");
     }
   },
   'drag img'(event, ev) {
+    var Team = event.target.id.substr(0,event.target.id.indexOf('_'));
+
+    //if server aleady called or piece being moved isnt of your team then end function
+    if(dragstart == event.target.parentElement.id && dragshipid == event.target.id || Team != player) return;
+
+    Meteor.call('checkTurn', Team, (error, result) => {
+    if(result==true){
+
     dragstart = event.target.parentElement.id;
     dragshipid = event.target.id;
+
+    }else{dragstart=dragshipid=null;}
+    }); //end of checkTurn
   },
   'click #new'(event){
     if(document.getElementById("gamename").value !== null){
-      Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date()})
+      Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date(), turn: "british"})
       let currentgame = document.getElementById("gamename").value;
       console.log("create new game "+document.getElementById("gamename").value);
     }
   },
   'click #next'(event, instance) {
     //let result = Meteor.wrapAsync(
-    Meteor.call('nextTurn', player, (error, result) => {
+//games.find({"name":document.getElementById('gamename').value}).fetch()[0]._id
+    var gameid = Games.find({"name":document.querySelector('#gameselect').value}).fetch()[0]._id;
+
+    Meteor.call('nextTurn', player, gameid, (error, result) => {
       if(result){ //deactivated on server
         console.log("turn accepted "+result);
         selected = null;
@@ -123,7 +133,7 @@ Template.game.events({
         //remove sunken ships
         document.querySelectorAll(".sunk").forEach(e => e.parentNode.removeChild(e));
       }else{
-console.log("other move");
+        console.log("not your turn to pass");
       }
     });
   },
@@ -133,50 +143,44 @@ console.log("other move");
   Meteor.call('checkTurn', selectedTeam, (error, result) => {
     if(result==true){
 
-    if(selected==null){
+     if(selected==null){
       selected = { ship: e.target.id, location: e.target.parentNode.id };
       console.log("Selected: "+JSON.stringify(selected));
       //e.target.style.backgroundImage = "url('0_6.png')";
-      document.getElementById(e.target.parentNode.id).classList.add('selected');//////////////////////
+      document.getElementById(e.target.parentNode.id).classList.add('selected'); ///////////////
       //document.body.classList.add('cursor');
       document.body.style.cursor = "crosshair";
-    }
+     }
     }else if(selected){ //if deselecting ship //select!=null and its the same as current select
       if(selected.location==e.target.parentNode.id){
         document.body.style.cursor = null; //"default";
       }else{ //fire
         checkfire(e.target, e.target.parentNode);
       }
-
-      console.log("deselecting");
         selected = null;
-    //}
-   } //end of if result
-   });
-  }
+   } 
+  }); //end of checkTurn
+ }
 });
 
 Template.gamestats.helpers({
   current: function () {
 //var currentgame = document.getElementById("gamename").value;
 //console.log("helper "+currentgame);//{_id : currentgame}
-var themove = Moves.find().fetch();
-themove = themove[themove.length - 1];
-var theship = document.getElementById(themove.ship);
-document.getElementById(themove.finish).appendChild(theship);
-    return Games.findOne().name; //.fetch();
+    var themove = Moves.find().fetch();
+    themove = themove[themove.length - 1];
+    var theship = document.getElementById(themove.ship);
+    document.getElementById(themove.finish).appendChild(theship);
+    return document.querySelector("#gameselect").value //Games.findOne().name; //.fetch();
   },
   gamelist: function() {
     return Games.find({}, {sort: {createdAt: -1}}).fetch();
   }
 });
-///build a game from server
+///TODO build a game from server
 
 ///multiplayer sessions
-//navigator.userAgent.includes("Chrome")
-
-///place a piece
-//document.getElementById().appendChild()
+//record whos turn it is to allow multiple games
 
 ///get latest move
 //find({}).sort({'_id': -1}).limit(1)
