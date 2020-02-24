@@ -16,23 +16,29 @@ Meteor.publish('moves', function() {
 });
 Meteor.methods({
   newGame: function(gameData) {
-   // console.log("server function\n"+JSON.stringify(gameData));
     var gameID = Games.insert(gameData);
     return gameID;
+  },
+  joingame: function(game){//{_id: game}  creator
+    if(Games.find({"_id":game}).fetch()[0].creator==this.userId) return "cant play against yourself";
+    var cb = Games.update(game, { $set: {otherplayer: this.userId}});
+    return cb;
   },
   move: function(moveData){
     return Moves.insert(moveData);
   },
-  nextTurn: function(player, gameid){ 
-    if(player=="british" && turn=="british"){
+  nextTurn: function(player, gameid){
+
+  if(Games.find(gameid).fetch()[0].creator==this.userId && Games.find({"_id":gameid}).fetch()[0].turn=="british"){
       turn = "german";
-    }else if(player=="german" && turn=="german"){
+    }else if(Games.find(gameid).fetch()[0].otherplayer==this.userId && Games.find({"_id":gameid}).fetch()[0].turn=="german"){
       turn = "british";
     }else{ return false; }
     Games.update(gameid, { $set: { "turn":turn } });
     return true;
   },
   checkTurn: function(player){
+//    console.log("p "+player+" t "+turn);
     if(player==turn) return true;
   }
 });

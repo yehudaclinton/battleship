@@ -3,26 +3,36 @@
 </head>
 
 <body>
-
+{{> loginButtons}}
+{{#if currentUser}}
   <h1>Welcome to Battleship!</h1>
 
   {{> gamestats}}
   {{> game}}
+
+{{/if}}
 </body>
 
 <template name="gamestats">
-  <p>welcome to -{{current}}- game.</p>
-  Select - <select id="gameselect">
+<p>here is my battleship game. Maybe it should be called battleship chess. The graphics are taken from triplea<br>the default teams are firef$
+<br>
+
+  <p>welcome to -{{current}}- game.</p>    
+<br>
+</template>
+
+<template name="game">
+<input type="text" id="gamename" /><button id="new">New Game</button>
+<br>
+
+  <p>Select - <select id="gameselect">
+  <option value="choose">choose</option>
   {{#each gamelist}}
   <option value="{{this.name}}">{{this.name}}</option>
   {{/each}}
   </select>
-</template>
+ <button id="join">join</button></p>
 
-<template name="game">
-<p>here is my battleship game. Maybe it should be called battle ship chess. The graphics are taken from triplea</p>
-<br>
-<input type="text" id="gamename" /><button id="new">New Game</button>
 <br>
 <div id="map"></div>
 <p>Here is where there is going to controls and setup</p><button id="next">Next Turn</button><br>

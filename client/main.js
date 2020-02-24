@@ -17,9 +17,8 @@ Meteor.subscribe('games');
 Meteor.subscribe('moves');
 
 var player = "unassigned"; //multi player teams
-if(navigator.userAgent.includes("Chrome")) player = "british";
-if(navigator.userAgent.includes("Firefox")) player = "german";
-
+//if(navigator.userAgent.includes("Chrome")) player = "british";
+//if(navigator.userAgent.includes("Firefox")) player = "german";
 
 Template.game.onRendered(function(){
 
@@ -85,7 +84,7 @@ function checkmove(unit, loc, start){
     console.log("illegal move!! or not your turn");
   }
 }
-var dragshipid, dragstart;
+var dragshipid, dragstart, sTeam;
 Template.game.events({
   'dropped .space': function(event, temp) {
     event.preventDefault();
@@ -96,12 +95,12 @@ Template.game.events({
     }
   },
   'drag img'(event, ev) {
-    var Team = event.target.id.substr(0,event.target.id.indexOf('_'));
+    sTeam = event.target.id.substr(0,event.target.id.indexOf('_'));
 
     //if server aleady called or piece being moved isnt of your team then end function
-    if(dragstart == event.target.parentElement.id && dragshipid == event.target.id || Team != player) return;
+    if(dragstart == event.target.parentElement.id && dragshipid == event.target.id || sTeam != player) return;
 
-    Meteor.call('checkTurn', Team, (error, result) => {
+    Meteor.call('checkTurn', sTeam, (error, result) => {
     if(result==true){
 
     dragstart = event.target.parentElement.id;
@@ -111,11 +110,20 @@ Template.game.events({
     }); //end of checkTurn
   },
   'click #new'(event){
+    console.log("click new");
     if(document.getElementById("gamename").value !== null){
-      Meteor.call('newGame', {name: document.getElementById("gamename").value, createdAt: new Date(), turn: "british"})
-      let currentgame = document.getElementById("gamename").value;
+      player = "british";
+      console.log("hello create");
+      Meteor.call('newGame', {name: document.getElementById("gamename").value, creator: Meteor.userId(), otherplayer: "", turn: "british", createdAt: new Date()})
       console.log("create new game "+document.getElementById("gamename").value);
     }
+  },
+  'click #join'(){
+    player = "german";
+    var gameid = Games.find({"name":document.querySelector('#gameselect').value}).fetch()[0]._id;
+    Meteor.call('joingame', gameid, (error, result) => {
+      console.log("callback "+result);
+    });
   },
   'click #next'(event, instance) {
     //let result = Meteor.wrapAsync(
@@ -159,29 +167,22 @@ Template.game.events({
       }
         selected = null;
    } 
-  }); //end of checkTurn
+  }); //end of meteor call
  }
 });
 
-Template.gamestats.helpers({
-  current: function () {
-//var currentgame = document.getElementById("gamename").value;
-//console.log("helper "+currentgame);//{_id : currentgame}
-    var themove = Moves.find().fetch();
-    themove = themove[themove.length - 1];
-    var theship = document.getElementById(themove.ship);
-    document.getElementById(themove.finish).appendChild(theship);
-    return document.querySelector("#gameselect").value //Games.findOne().name; //.fetch();
-  },
+Template.game.helpers({
   gamelist: function() {
     return Games.find({}, {sort: {createdAt: -1}}).fetch();
   }
 });
-///TODO build a game from server
-
-///multiplayer sessions
-//record whos turn it is to allow multiple games
-
-///get latest move
-//find({}).sort({'_id': -1}).limit(1)
-
+Template.gamestats.helpers({
+  current: function (e) {
+    console.log("what goes on here "+e);
+    var themove = Moves.find().fetch(); //{"name":document.querySelector('#gameselect').value}
+    themove = themove[themove.length - 1]; //i really need to specify game to allow multiple games
+    var theship = document.getElementById(themove.ship);
+    document.getElementById(themove.finish).appendChild(theship);
+    return document.querySelector("#gameselect").value //Games.findOne().name; //.fetch();
+  }
+});
