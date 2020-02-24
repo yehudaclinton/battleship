@@ -7,7 +7,7 @@ This is supposed to be the readme for the server version
 
 * "meteor create battleship" and then overwrite the files with these
 * meteor remove autopublish insecure
-* meteor add raix:ui-dropped-event
+* meteor add raix:ui-dropped-event accounts-ui
 * meteor run
 
 localhost:3000
